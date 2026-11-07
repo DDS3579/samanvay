@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samanvay: multi-agent farm management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F5F3;--ink:#12282B;--mut:#51686B;--card:#fff;--line:#CBD8D5;--water:#1C7C9C;--soil:#B9822A;--ok:#2E8B57;--soft:#E3EDEA}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1819;--ink:#E3EFEC;--mut:#93ABA8;--card:#142427;--line:#274043;--water:#4FB3D1;--soil:#E0A84C;--ok:#5CC48A;--soft:#18302F}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.65 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:0 1.25rem}
+section{padding:3.5rem 0 0}
+h1,h2,h3{line-height:1.15;margin:0 0 .75rem;letter-spacing:-.02em}
+h1{font-size:clamp(3rem,11vw,6.5rem);font-weight:800;letter-spacing:-.045em}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0 0 1rem;max-width:68ch}
+.lead{font-size:clamp(1.1rem,2.4vw,1.4rem);color:var(--mut);max-width:60ch}
+.mut{color:var(--mut)}
+header.hero{padding:4rem 0 1rem;border-bottom:1px solid var(--line)}
+.tag{display:inline-block;border:1px solid var(--water);color:var(--water);border-radius:99px;padding:.2rem .8rem;font-size:.9rem;margin:0 .4rem .5rem 0}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);z-index:5}
+nav .wrap{display:flex;gap:1.1rem;overflow-x:auto;padding-top:.7rem;padding-bottom:.7rem;white-space:nowrap;scrollbar-width:none}
+nav a{color:var(--mut);text-decoration:none;font-size:.95rem}
+nav a:hover,nav a:focus-visible{color:var(--water)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--water);outline-offset:3px}
+.grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.2rem}
+.card p{margin:0;font-size:.97rem}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.scroll>svg{display:block;min-width:620px;width:100%;height:auto}
+.hint{display:none;font-size:.85rem;color:var(--mut);margin:.4rem 0 0}
+@media(max-width:700px){.hint{display:block}}
+svg text{fill:var(--ink);font-family:inherit}
+svg .m{fill:var(--mut)}
+.layers{display:grid;gap:.6rem}
+.layer{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
+.layer>b{display:block;margin-bottom:.5rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{background:var(--soft);border-radius:6px;padding:.3rem .65rem;font-size:.92rem}
+.chip.hi{background:var(--water);color:#fff}
+.arrow{text-align:center;color:var(--mut);font-size:.9rem;line-height:1}
+.flow{display:grid;gap:.6rem;grid-template-columns:1fr;counter-reset:s}
+.step{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--water);border-radius:10px;padding:.9rem 1.1rem;counter-increment:s}
+.step b::before{content:counter(s) ". ";color:var(--water)}
+.step p{margin:.25rem 0 0;font-size:.95rem}
+.step.loop{border-left-color:var(--soil)}
+@media(min-width:800px){.flow{grid-template-columns:1fr 1fr}}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;background:var(--soft)}
+td.n,th.n{text-align:right;white-space:nowrap}
+tfoot td{font-weight:800;border-bottom:0}
+.two{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+code{background:var(--soft);padding:.1rem .4rem;border-radius:4px;font-size:.88em}
+pre{background:var(--soft);border-radius:8px;padding:.9rem 1rem;overflow-x:auto;font-size:.85rem;margin:.5rem 0 0}
+.ver{display:grid;gap:.6rem}
+.ver div{display:grid;grid-template-columns:3.2rem 1fr;gap:.8rem;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem}
+.ver b{color:var(--water);font-size:1.15rem}
+.ver .core{border-color:var(--water)}
+ul{padding-left:1.2rem;margin:.4rem 0 1rem}
+li{margin:.25rem 0}
+footer{padding:3rem 0 4rem;color:var(--mut);font-size:.9rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.parts{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.part{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.8rem;text-align:center}
+.part b{display:block;color:var(--water)}
+.part span{font-size:.88rem;color:var(--mut)}
+.bars{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem 1.1rem}
+.row{display:grid;grid-template-columns:3.6rem 1fr 5.6rem;gap:.7rem;align-items:center;margin:.55rem 0;font-size:.9rem}
+.track{background:var(--soft);border-radius:6px;height:1.1rem;position:relative;overflow:hidden}
+.track i{position:absolute;left:0;top:0;bottom:0}
+.track .need{background:var(--soil);opacity:.45}
+.track .get{background:var(--water)}
+.key{font-size:.85rem;color:var(--mut)}
+dl{display:grid;grid-template-columns:minmax(6rem,max-content) 1fr;gap:.5rem 1rem;margin:0}
+dt{font-weight:600}dd{margin:0}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+<span class="tag">Science exhibition project</span><span class="tag">Autonomous farm manager</span><span class="tag">Nepal</span><span class="tag">ESP32 + local AI</span>
+<h1>Samanvay</h1>
+<p class="lead">A domain-agnostic multi-agent coordination engine, first built as an autonomous farm manager: one app that shares the water, watches crop conditions and tells you what the farm needs.</p>
+</div></header>
+
+<nav><div class="wrap">
+<a href="#simple">In plain words</a><a href="#problem">Problem</a><a href="#build">What we build</a><a href="#look">Physical layout</a><a href="#arch">Architecture</a><a href="#flow">How it works</a><a href="#hardware">Hardware & budget</a><a href="#software">Software</a><a href="#wide">Wider use</a><a href="#versions">Versions</a><a href="#risks">Risks</a><a href="#satellite">Bonus: satellite</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="simple">
+<h2>The project in plain words</h2>
+<p>No technical background needed. Samanvay is a farm manager that never sleeps. It checks how dry each farm is, decides who needs water most, waters them, and tells you why. Here is the idea in four pictures.</p>
+
+<h3>1. The farm has a body</h3>
+<div class="parts">
+<div class="part"><b>Sensors</b><span>the eyes: measure soil dryness, temperature and water level</span></div>
+<div class="part"><b>ESP32 chips</b><span>the nerves: carry what the eyes see</span></div>
+<div class="part"><b>Laptop</b><span>the brain: thinks and decides</span></div>
+<div class="part"><b>Pump + valves</b><span>the hands: do the watering</span></div>
+<div class="part"><b>The app</b><span>the window: shows you everything</span></div>
+</div>
+<p class="key" style="margin-top:.5rem">Read left to right: eyes see, nerves carry, brain decides, hands act. The app shows you all of it.</p>
+
+<h3 style="margin-top:1.6rem">2. A moment in the farm’s day</h3>
+<div class="flow">
+<div class="step"><b>The soil gets dry</b><p>Farm B has not been watered for a while and the sun is strong.</p></div>
+<div class="step"><b>The sensor notices</b><p>It sends “I am getting dry” to the brain every few seconds.</p></div>
+<div class="step"><b>The brain thinks</b><p>How much water is in the tank? Is rain coming? Which farm is most in danger?</p></div>
+<div class="step"><b>The hands act, the app explains</b><p>The valve for Farm B opens. The app says why: “B was closest to wilting.”</p></div>
+</div>
+
+<h3 style="margin-top:1.6rem">3. Why a smart brain, not a timer</h3>
+<p>Say the tank holds 50 litres, but the farms want 80. A timer would give everyone the same share and some crops would still wilt. Samanvay shares it by who needs it most.</p>
+<div class="bars" role="img" aria-label="Example: tank has 50 litres. Farm A needs 10 gets 5, B needs 25 gets 25, C needs 15 gets 0, D needs 30 gets 20.">
+<div class="row"><b>Farm A</b><div class="track"><i class="need" style="width:33%"></i><i class="get" style="width:17%"></i></div><span>needs 10, gets 5</span></div>
+<div class="row"><b>Farm B</b><div class="track"><i class="need" style="width:83%"></i><i class="get" style="width:83%"></i></div><span>needs 25, gets 25</span></div>
+<div class="row"><b>Farm C</b><div class="track"><i class="need" style="width:50%"></i><i class="get" style="width:0"></i></div><span>needs 15, gets 0</span></div>
+<div class="row"><b>Farm D</b><div class="track"><i class="need" style="width:100%"></i><i class="get" style="width:67%"></i></div><span>needs 30, gets 20</span></div>
+</div>
+<p class="key" style="margin-top:.5rem">Brown is what the farm needs. Blue is what it gets. B and D were closest to wilting. C can wait because rain is forecast tomorrow. (Example numbers.)</p>
+
+<h3 style="margin-top:1.6rem">4. Who does what inside the brain</h3>
+<div class="parts">
+<div class="part"><b>Forecaster</b><span>a small prediction model that guesses what happens next</span></div>
+<div class="part"><b>Decider</b><span>a fair-sharing formula that splits the water</span></div>
+<div class="part"><b>Guard</b><span>safety rules that stop anything dangerous</span></div>
+<div class="part"><b>Explainer</b><span>an AI language model that says why, in plain words</span></div>
+</div>
+<p class="key" style="margin-top:.5rem">The numbers and decisions come from the first three. The AI language model only talks. It never touches the pump.</p>
+
+<h3 style="margin-top:1.6rem">Words you will hear</h3>
+<dl>
+<dt>Sensor</dt><dd>a small device that measures something, like soil wetness.</dd>
+<dt>ESP32</dt><dd>a tiny Wi-Fi computer chip that reads sensors and sends the numbers on.</dd>
+<dt>MQTT</dt><dd>the postman: a simple way for chips and the laptop to pass messages.</dd>
+<dt>Backend</dt><dd>the program on the laptop that does the thinking.</dd>
+<dt>Agent</dt><dd>one specialist helper in the brain, such as the irrigation agent.</dd>
+<dt>ML model</dt><dd>a small program that learns patterns from numbers to predict what comes next.</dd>
+<dt>Dashboard</dt><dd>the screen in the app where you see the farm live.</dd>
+</dl>
+<p style="margin-top:1rem"><b>At the exhibition:</b> we let one tray dry out and watch the system notice, decide and water it, while the app explains each step.</p>
+</section>
+
+<section id="problem">
+<h2>The problem</h2>
+<p>Many farms draw from one river, lake or tank. When the source runs low, several farms go dry at the same time and someone has to decide who gets water first. Today that decision is usually a fixed rotation or a guess. Neither accounts for how dry each farm actually is, how much water is left, or whether rain is coming. And water is only one of many decisions: what to plant, what the soil needs, when heat becomes a threat.</p>
+<div class="grid">
+<div class="card"><h3>Wasted water</h3><p>Timers water farms that don’t need it while another farm wilts.</p></div>
+<div class="card"><h3>No live data</h3><p>Nobody knows the real soil moisture or the real source level at the moment of the decision.</p></div>
+<div class="card"><h3>No single view</h3><p>Water, weather, soil and crop decisions live in different places, or only in the farmer’s head.</p></div>
+</div>
+</section>
+
+<section id="build">
+<h2>What we build</h2>
+<p>Open one app and see the whole farm: what is dry, what is too hot, what the soil likely needs, and what to do next. Behind it, a team of AI agents watches the sensors and runs the farm. Water comes first: four farms share one reservoir, and the agents decide who gets water, how much and when, then explain every decision.</p>
+<p>The core engine never mentions farming. It only knows four things, so the same engine can later run other domains.</p>
+<div class="grid">
+<div class="card"><h3>Resource</h3><p>A limited pool with a level and a refill or drain rate. Here: the reservoir.</p></div>
+<div class="card"><h3>Consumers</h3><p>Entities that request from the pool, each with a need and a priority. Here: the farms.</p></div>
+<div class="card"><h3>Actuators</h3><p>How an allocation physically happens. Here: pumps and valves.</p></div>
+<div class="card"><h3>Policy</h3><p>The rules and goals: survival thresholds, fairness, water saved.</p></div>
+</div>
+<h3 style="margin-top:1.8rem">The agent team</h3>
+<p>Each agent’s numbers come from small prediction models and rules. The language model only explains and never decides.</p>
+<div class="grid">
+<div class="card"><h3>Irrigation agent</h3><p>Decides water for each farm from moisture, drying speed and reservoir level. Acts on its own, inside safety limits.</p></div>
+<div class="card"><h3>Climate agent</h3><p>Watches air and soil temperature and humidity. Flags heat stress, cold nights and good planting windows.</p></div>
+<div class="card"><h3>Crop planner</h3><p>Suggests what to plant next from season, temperature, soil moisture and local conditions.</p></div>
+<div class="card"><h3>Soil advisor</h3><p>Estimates likely fertilizer or lime needs from crop stage, watering history, weather and optional manual soil-test entries. Advice only.</p></div>
+<div class="card"><h3>Arbiter</h3><p>Settles conflicts between agents and shares limited resources like water. Final say, inside safety limits.</p></div>
+</div>
+<p style="margin-top:1rem"><b>Acts on its own:</b> pump and valve control. <b>Waits for your approval:</b> fertilizer, planting and any other advice. <b>Why no NPK sensor:</b> cheap NPK probes are unreliable, so nutrient advice comes from crop-stage rules, farm history and optional soil-test entries (pH strips or a lab report), and is labeled as an estimate.</p>
+<p><b>In scope:</b> core engine, agent team, mobile-friendly app, sensor simulator, benchmark against a plain timer. <b>Out of scope for now:</b> NPK sensors, pest or disease detection, LoRa, solar, cloud hosting, user accounts, a native mobile app, real-farm deployment. Satellite is a bonus at the end of this page.</p>
+</section>
+
+<section id="look">
+<h2>How it looks on the table</h2>
+<p>A scaled model of the real setup. A tank stands in for the lake and four small trays stand in for farms, so no real plants are needed. Each farm carries moisture, soil temperature and air sensors.</p>
+<div class="scroll">
+<svg viewBox="0 0 700 350" role="img" aria-label="Reservoir with level sensor and pump feeding four farm plots through valves, all reporting wirelessly to a laptop">
+<rect x="240" y="8" width="220" height="36" rx="6" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="350" y="31" text-anchor="middle" font-size="14" font-weight="600">Laptop: Samanvay brain</text>
+<g stroke="var(--mut)" stroke-width="1.2" stroke-dasharray="4 4" fill="none">
+<path d="M75 76 L260 44"/><path d="M260 112 L310 44"/><path d="M380 112 L340 44"/><path d="M500 112 L360 44"/><path d="M620 112 L410 44"/>
+</g>
+<rect x="480" y="8" width="190" height="36" rx="6" fill="var(--soft)" stroke="var(--ink)"/><text x="575" y="31" text-anchor="middle" font-size="13">Phone or desktop app</text><path d="M460 26 L480 26" stroke="var(--mut)" stroke-dasharray="4 4"/>
+<text x="14" y="62" font-size="12" class="m">Wi-Fi / MQTT</text>
+<rect x="20" y="124" width="110" height="170" rx="6" fill="none" stroke="var(--ink)" stroke-width="2"/>
+<rect x="22" y="206" width="106" height="86" fill="var(--water)" opacity=".55"/>
+<text x="75" y="318" text-anchor="middle" font-size="14" font-weight="600">Reservoir</text>
+<rect x="45" y="76" width="60" height="26" rx="4" fill="var(--soft)" stroke="var(--ink)"/>
+<text x="75" y="93" text-anchor="middle" font-size="11">Level + ESP32</text>
+<path d="M75 102 L75 206" stroke="var(--water)" stroke-dasharray="3 3"/>
+<circle cx="165" cy="262" r="20" fill="var(--soft)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="165" y="266" text-anchor="middle" font-size="11">Pump</text>
+<path d="M130 262 L145 262 M185 262 L680 262" stroke="var(--water)" stroke-width="5" fill="none"/>
+<g font-size="12">
+<g><path d="M260 262 L260 214" stroke="var(--water)" stroke-width="4"/><circle cx="260" cy="236" r="9" fill="var(--card)" stroke="var(--ink)"/><text x="260" y="240" text-anchor="middle" font-size="9">V</text>
+<rect x="212" y="112" width="96" height="102" rx="6" fill="var(--soil)" opacity=".35" stroke="var(--soil)"/><text x="260" y="150" text-anchor="middle" font-weight="600">Farm A</text><text x="260" y="170" text-anchor="middle" class="m">moisture, temp</text></g>
+<g><path d="M380 262 L380 214" stroke="var(--water)" stroke-width="4"/><circle cx="380" cy="236" r="9" fill="var(--card)" stroke="var(--ink)"/><text x="380" y="240" text-anchor="middle" font-size="9">V</text>
+<rect x="332" y="112" width="96" height="102" rx="6" fill="var(--soil)" opacity=".35" stroke="var(--soil)"/><text x="380" y="150" text-anchor="middle" font-weight="600">Farm B</text><text x="380" y="170" text-anchor="middle" class="m">moisture, temp</text></g>
+<g><path d="M500 262 L500 214" stroke="var(--water)" stroke-width="4"/><circle cx="500" cy="236" r="9" fill="var(--card)" stroke="var(--ink)"/><text x="500" y="240" text-anchor="middle" font-size="9">V</text>
+<rect x="452" y="112" width="96" height="102" rx="6" fill="var(--soil)" opacity=".35" stroke="var(--soil)"/><text x="500" y="150" text-anchor="middle" font-weight="600">Farm C</text><text x="500" y="170" text-anchor="middle" class="m">moisture, temp</text></g>
+<g><path d="M620 262 L620 214" stroke="var(--water)" stroke-width="4"/><circle cx="620" cy="236" r="9" fill="var(--card)" stroke="var(--ink)"/><text x="620" y="240" text-anchor="middle" font-size="9">V</text>
+<rect x="572" y="112" width="96" height="102" rx="6" fill="var(--soil)" opacity=".35" stroke="var(--soil)"/><text x="620" y="150" text-anchor="middle" font-weight="600">Farm D</text><text x="620" y="170" text-anchor="middle" class="m">moisture, temp</text></g>
+</g>
+<text x="400" y="296" text-anchor="middle" font-size="12" class="m">main pipe: one pump, one valve per farm (pump and valves are switched by relays)</text>
+<text x="400" y="322" text-anchor="middle" font-size="12" class="m">rain and light sensors share the reservoir node</text>
+</svg>
+</div>
+<p class="hint">Swipe sideways to see the full diagram.</p>
+</section>
+
+<section id="arch">
+<h2>System architecture</h2>
+<p>Hardware only collects data and obeys commands. All thinking happens locally on the laptop.</p>
+<div class="layers">
+<div class="layer"><b>Field layer (ESP32 nodes)</b><div class="chips"><span class="chip">4 farm nodes: soil moisture, soil temp, air temp, humidity</span><span class="chip">1 reservoir node: water level, rain, light</span><span class="chip">Relays: pump and valves</span></div></div>
+<div class="arrow">▼ publish telemetry · ▲ receive commands (MQTT over local Wi-Fi)</div>
+<div class="layer"><b>Messaging</b><div class="chips"><span class="chip">Mosquitto MQTT broker</span><span class="chip hi">Simulator: fake nodes, same message format</span></div></div>
+<div class="arrow">▼</div>
+<div class="layer"><b>Samanvay core (FastAPI, Python, on laptop)</b><div class="chips"><span class="chip">Ingest + cleaning</span><span class="chip">State store (SQLite)</span><span class="chip hi">Forecaster (small ML models)</span><span class="chip hi">Arbiter (deterministic allocator)</span><span class="chip">Safety layer</span><span class="chip hi">Agent team: irrigation, climate, crop planner, soil advisor</span><span class="chip">LLM explainer + approvals queue</span><span class="chip">Scenario pack loader</span></div></div>
+<div class="arrow">▲ rain forecast (Open-Meteo, optional) · ▼ live updates (WebSocket)</div>
+<div class="layer"><b>Dashboard (Next.js, installable web app)</b><div class="chips"><span class="chip">Farm health summary</span><span class="chip">Live farm map</span><span class="chip">Moisture and level charts</span><span class="chip">Agent reasoning stream</span><span class="chip">What to do next</span><span class="chip">Approve or reject advice</span><span class="chip">Manual override</span><span class="chip">Benchmark view</span></div></div>
+</div>
+<p style="margin-top:1rem">Hardware and software meet at one interface contract, so each side can be built and tested alone:</p>
+<pre>publish: {"node_id":"farm_a","domain":"irrigation","metric":"soil_moisture","value":41.2,"unit":"%","ts":1730000000}
+command: {"node_id":"farm_a","actuator":"valve","command":"open","duration_s":30,"ts":1730000005}</pre>
+</section>
+
+<section id="flow">
+<h2>How a decision gets made</h2>
+<p>The loop runs every few seconds. The allocator makes the decision; the agents explain and negotiate it in words.</p>
+<div class="flow">
+<div class="step"><b>Sense</b><p>Each node sends soil moisture, soil and air temperature, and humidity. The reservoir node sends level, rain and light.</p></div>
+<div class="step"><b>Clean</b><p>Smooth the noisy readings, calibrate them, and flag any sensor that goes silent or jumps.</p></div>
+<div class="step"><b>Predict</b><p>Small ML models (such as regression or gradient boosting) estimate each farm’s drying rate, time until critical, and how fast the reservoir is falling. Rain forecast adjusts the estimate.</p></div>
+<div class="step"><b>Score need</b><p>Each farm gets an urgency score from its moisture gap, drying speed, crop sensitivity and time since last watering.</p></div>
+<div class="step"><b>Negotiate</b><p>Irrigation, climate, crop and soil agents state their case. The arbiter weighs them against the water budget left in the reservoir. The numbers come from the models, not the language model.</p></div>
+<div class="step"><b>Allocate</b><p>The deterministic arbiter splits the available water: who gets it, how much, in what order. In a shortage it protects farms closest to crop loss first.</p></div>
+<div class="step"><b>Check safety</b><p>Never run the pump dry, never overwater, never open two valves past the pump’s capacity. Any breach blocks the command.</p></div>
+<div class="step"><b>Act</b><p>Water actions run automatically inside safety limits. Fertilizer and planting advice goes to the app and waits for your approval.</p></div>
+<div class="step"><b>Explain</b><p>The language model turns the allocator’s numbers into plain words on the dashboard: “Farm B is 6 hours from critical, reservoir at 38%, so B gets 20 s now and A waits.”</p></div>
+<div class="step loop"><b>Learn and repeat</b><p>Compare predicted and actual drying, update the model, and return to step 1.</p></div>
+</div>
+</section>
+
+<section id="hardware">
+<h2>Hardware and budget</h2>
+<p>All parts are ESP32-based and available in Kathmandu or on Daraz. Prices are rough estimates in NPR; check current prices before buying.</p>
+<div class="two"><div><h3>Full build, real plants</h3><div class="scroll"><table><thead><tr><th>Item</th><th class="n">Qty</th><th class="n">NPR</th></tr></thead><tbody><tr><td>ESP32 DevKit (4 farms + 1 reservoir)</td><td class="n">5</td><td class="n">4,000</td></tr><tr><td>Capacitive soil moisture sensor</td><td class="n">4</td><td class="n">1,400</td></tr><tr><td>DHT22 temperature and humidity</td><td class="n">2</td><td class="n">800</td></tr><tr><td>DS18B20 soil temperature probe</td><td class="n">4</td><td class="n">700</td></tr><tr><td>Waterproof ultrasonic (JSN-SR04T)</td><td class="n">1</td><td class="n">900</td></tr><tr><td>Light sensor (BH1750) + rain sensor</td><td class="n">1+1</td><td class="n">400</td></tr><tr><td>5V mini water pump + tubing</td><td class="n">4</td><td class="n">2,000</td></tr><tr><td>Relay modules (4-channel)</td><td class="n">1–2</td><td class="n">600</td></tr><tr><td>Power supplies, wires, breadboards</td><td class="n">–</td><td class="n">1,200</td></tr><tr><td>Pots, soil, container, plants</td><td class="n">–</td><td class="n">1,000</td></tr></tbody><tfoot><tr><td>Total</td><td></td><td class="n">≈ 13,000</td></tr></tfoot></table></div></div><div><h3>Demo model, no real plants</h3><div class="scroll"><table><thead><tr><th>Item</th><th class="n">Qty</th><th class="n">NPR</th></tr></thead><tbody><tr><td>ESP32 DevKit (4 farms + 1 reservoir)</td><td class="n">5</td><td class="n">4,000</td></tr><tr><td>Capacitive soil moisture sensor</td><td class="n">4</td><td class="n">1,400</td></tr><tr><td>DHT22 temperature and humidity</td><td class="n">2</td><td class="n">800</td></tr><tr><td>DS18B20 soil temperature probe</td><td class="n">4</td><td class="n">700</td></tr><tr><td>Waterproof ultrasonic (JSN-SR04T)</td><td class="n">1</td><td class="n">900</td></tr><tr><td>Light sensor (BH1750) + rain sensor</td><td class="n">1+1</td><td class="n">400</td></tr><tr><td>5V mini water pump + tubing</td><td class="n">4</td><td class="n">2,000</td></tr><tr><td>Relay modules (4-channel)</td><td class="n">1–2</td><td class="n">600</td></tr><tr><td>Power supplies, wires, breadboards</td><td class="n">–</td><td class="n">1,200</td></tr><tr><td>Model: trays, small soil or sponge boxes, cardboard base</td><td class="n">–</td><td class="n">300</td></tr></tbody><tfoot><tr><td>Total</td><td></td><td class="n">≈ 12,300</td></tr></tfoot></table></div></div><div><h3>Cheapest start: 2 farms</h3><div class="scroll"><table><thead><tr><th>Item</th><th class="n">Qty</th><th class="n">NPR</th></tr></thead><tbody><tr><td>ESP32 DevKit</td><td class="n">3</td><td class="n">2,400</td></tr><tr><td>Capacitive soil moisture sensor</td><td class="n">2</td><td class="n">700</td></tr><tr><td>DHT11</td><td class="n">2</td><td class="n">300</td></tr><tr><td>DS18B20 soil temperature probe</td><td class="n">2</td><td class="n">350</td></tr><tr><td>HC-SR04 ultrasonic (demo only)</td><td class="n">1</td><td class="n">300</td></tr><tr><td>Mini pump + tubing</td><td class="n">2</td><td class="n">1,000</td></tr><tr><td>2-channel relay</td><td class="n">1</td><td class="n">300</td></tr><tr><td>Power, wires, breadboard</td><td class="n">–</td><td class="n">800</td></tr><tr><td>Pots, soil, plants</td><td class="n">–</td><td class="n">600</td></tr></tbody><tfoot><tr><td>Total</td><td></td><td class="n">≈ 6,750</td></tr></tfoot></table></div></div></div>
+<div class="grid" style="margin-top:1rem">
+<div class="card"><h3>Optional: water flow sensor</h3><p>YF-S201 flow meter, about NPR 500. Lets the system measure water actually delivered to each farm.</p></div>
+<div class="card"><h3>Optional: soil test kit</h3><p>pH strips or a basic test kit, a few hundred NPR. You type the result into the app and the soil advisor uses it. More trustworthy than a cheap NPK probe.</p></div>
+<div class="card"><h3>Optional: second physical domain</h3><p>INA219 current sensor, LEDs or small fans, small battery. About NPR 1,000–1,500. Reuses the same ESP32s to run a power-budget demo.</p></div>
+<div class="card"><h3>Also needed</h3><p>Your own Wi-Fi router for the exhibition, so nothing depends on venue internet. Software cost is zero: everything runs locally.</p></div>
+</div>
+</section>
+
+<section id="software">
+<h2>Software stack</h2>
+<div class="grid">
+<div class="card"><h3>Firmware</h3><p>Arduino framework on ESP32, <code>WiFi.h</code> and <code>PubSubClient</code> for MQTT. Auto-reconnect built in.</p></div>
+<div class="card"><h3>Backend</h3><p>Python, FastAPI, <code>paho-mqtt</code>, SQLite, WebSockets for live updates.</p></div>
+<div class="card"><h3>Prediction</h3><p>Small ML models (ridge regression, gradient boosting, Holt-Winters trends) forecast drying rate, time to critical and reservoir depletion, with weather from Open-Meteo. They run in milliseconds with no GPU. Accuracy is shown as predicted vs actual, and any synthetic data is labeled.</p></div>
+<div class="card"><h3>Agents</h3><p>LangGraph runs the irrigation, climate, crop and soil agents plus the arbiter. The language model (local through Ollama, or the Claude API) only explains decisions, handles Nepali and drafts advice. It never controls the pump.</p></div>
+<div class="card"><h3>Dashboard</h3><p>Next.js as an installable web app (PWA). Works on phone and desktop with no Electron needed.</p></div>
+<div class="card"><h3>Knowledge base</h3><p>Crop rules for Nepal: growth stages, ideal temperature and moisture ranges, planting seasons. The agents reason over this, so advice is grounded and checkable.</p></div>
+<div class="card"><h3>Simulator</h3><p>Fake nodes publishing the same messages as real hardware, so development never waits on wiring.</p></div>
+</div>
+</section>
+
+<section id="wide">
+<h2>Beyond irrigation</h2>
+<p>Irrigation is the demonstration, not the limit. The same engine loads a different scenario pack (a config file with entities, units, thresholds and labels) to run another domain with no core code changes.</p>
+<div class="scroll"><table>
+<thead><tr><th>Domain</th><th>Shared resource</th><th>How it differs</th><th>Shown as</th></tr></thead>
+<tbody>
+<tr><td><b>Farm irrigation</b></td><td>Reservoir water</td><td>Slow drying, refills with rain</td><td>Physical (main demo)</td></tr>
+<tr><td>Load-shedding power</td><td>Battery or inverter</td><td>Instant, only drains</td><td>Physical (optional) or simulated</td></tr>
+<tr><td>Building water tank</td><td>One tank, many floors</td><td>Scheduled refill</td><td>Simulated</td></tr>
+<tr><td>Lab or server cooling</td><td>Cooling capacity</td><td>Thermal lag</td><td>Simulated</td></tr>
+<tr><td>Campus Wi-Fi</td><td>Bandwidth</td><td>Bursty demand</td><td>Simulated</td></tr>
+</tbody>
+</table></div>
+<p style="margin-top:1rem"><b>Proof, not claims:</b> in each scenario we run Samanvay against a plain timer or fixed-split baseline and plot water used, crop-stress time and fairness. One live domain swap on stage, same engine and new config, makes the point.</p>
+</section>
+
+<section id="versions">
+<h2>Version roadmap</h2>
+<div class="ver">
+<div><b>V1</b><span>One node to MQTT to a basic dashboard. Manual and threshold pump control. Proves the pipeline.</span></div>
+<div><b>V2</b><span>Four farms plus the reservoir. Urgency-score priority and a live dashboard.</span></div>
+<div class="core"><b>V3</b><span><b style="font-size:1rem;color:inherit">Exhibition-ready core.</b> Arbiter with a water budget and a drought mode where the reservoir drops and the system must ration.</span></div>
+<div class="core"><b>V4</b><span>Prediction: per-farm drying model, reservoir depletion forecast, rain forecast. Benchmark against the timer baseline.</span></div>
+<div><b>V5</b><span>Agent team (irrigation, climate, crop planner, soil advisor) argues its case, the arbiter decides, reasoning streams live. Approval flow for advice. Alerts and Nepali output.</span></div>
+<div><b>V6</b><span>Scenario packs, live domain swap, what-if simulator, sensor-failure detection.</span></div>
+<div><b>V7</b><span>Real-world pilot: LoRa, solar power, real valves and flow meters, a real farm or cooperative.</span></div>
+<div><b>V8</b><span>Bonus: satellite crop-health layer, only if time allows (last section).</span></div>
+</div>
+<p class="mut" style="margin-top:.8rem">V3 plus V4 with the benchmark is already a strong exhibition entry. V5 and V6 are the wow layer on top.</p>
+</section>
+
+<section id="risks">
+<h2>Honest risks</h2>
+<ul>
+<li><b>No historical data.</b> We will not claim deep learning on past data. The model learns online and any synthetic data is disclosed.</li>
+<li><b>Sensor noise.</b> Capacitive sensors drift. Calibration and smoothing are required.</li>
+<li><b>LLMs are slow and unpredictable.</b> So they never decide or control the pump. Small ML models predict, a deterministic allocator decides, and the safety layer guards.</li>
+<li><b>“Why not just if-else?”</b> Answer: if-else cannot optimally split limited water across competing demands with forecasts. The benchmark graph is the proof.</li>
+<li><b>Reskin risk.</b> Scenario packs must differ in real dynamics, not just labels.</li>
+<li><b>Autonomy limits.</b> Only water actions run on their own. Fertilizer, planting and other advice always waits for a human.</li>
+<li><b>Nutrient claims.</b> Without NPK sensors, nutrient advice is an estimate from rules and history, and is labeled that way.</li>
+<li><b>Venue Wi-Fi.</b> Bring our own router and keep everything local.</li>
+</ul>
+</section>
+
+<section id="satellite">
+<h2>Bonus: satellite view</h2>
+<p>Only if the core is finished on time. It adds a view of a real field from space, at no cost, and feeds the same agent team.</p>
+<div class="grid">
+<div class="card"><h3>Free data</h3><p>Sentinel-2 (10 m detail, about every 5 days), Landsat, Google Earth Engine (free for non-commercial use) and NASA POWER for weather history.</p></div>
+<div class="card"><h3>What it adds</h3><p>Vegetation (NDVI), moisture (NDMI) and chlorophyll (NDRE) maps. Flags parts of a field that look stressed and may need water or nutrients.</p></div>
+<div class="card"><h3>Limits</h3><p>10 m pixels can’t see the table model, so it runs on a real nearby field. Monsoon clouds cause gaps. It shows possible stress, never an exact nutrient diagnosis, so advice says “verify with a soil test.”</p></div>
+<div class="card"><h3>Cost</h3><p>NPR 0.</p></div>
+</div>
+</section>
+</main>
+<footer><div class="wrap">Samanvay · domain-agnostic multi-agent coordination, first built for shared-water irrigation. Draft v0.3</div></footer>
+</body>
+</html>
